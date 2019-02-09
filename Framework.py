@@ -1,5 +1,5 @@
-import numpy as np  
-import pygame
+from DecisionFactory import DecisionFactory  
+import pygame, sys
 from pygame.locals import *
 
 
@@ -10,75 +10,90 @@ green = (0, 255, 0)
 red = (255, 0, 0)
 grey = (50, 50, 50)
 
+colours = {
+            0 : white,
+            1 : grey,
+            2 : green,
+            3 : blue,
+            4 : red
+            }
+
 Grid = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 3, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
 
-def load_png(name):
-    """ Load image and return image object"""
-    fullname = os.path.join('data', name)
-    try:
-        image = pygame.image.load(fullname)
-        if image.get_alpha() is None:
-            image = image.convert()
-        else:
-            image = image.convert_alpha()
-    except pygame.error, message:
-        print 'Cannot load image:', fullname
-        raise SystemExit, message
-    return image, image.get_rect()
+TILESIZE = 50
+MAPWIDTH = 10
+MAPHEIGHT = 10
 
+#current position of player [row, col]
+POSITION = [3,3]
 
+#PLAYER HAS FOUND GOAL
+FINISHED = False
 
-
-        
-
-
+#gets decision & checks if valid
+def validate_move(DF):
+    global FINISHED
+    global POSITION
+    global Grid
+    choice = DF.get_decision()
+    if choice == 'up':
+        check_pos = [POSITION[0],POSITION[1]+1]
+    if choice == 'down':
+        check_pos = [POSITION[0],POSITION[1]-1]
+    if choice == 'left':
+        check_pos = [POSITION[0]-1,POSITION[1]]
+    if choice == 'right':
+        check_pos = [POSITION[0]+1,POSITION[1]+1]
+    if choice == 'wait':
+        check_pos = [POSITION[0],POSITION[1]]
+    tile = Grid[check_pos[0]][check_pos[1]]
+    if tile == 3:
+        FINISHED = True
+        return 'success'
+    if tile == 0:
+        Grid[POSITION[0]][POSITION[1]] = 0
+        POSITION[0] = check_pos[0]
+        POSITION[1] = check_pos[1]
+        Grid[POSITION[0]][POSITION[1]] = 2
+        return 'success'
+    else: 
+        return 'fail'
+    
 def main():
 	 # Initialise screen
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))
-    pygame.display.set_caption('Basic Pygame program')
+    screen = pygame.display.set_mode((MAPWIDTH*TILESIZE, MAPHEIGHT*TILESIZE))
+    pygame.display.set_caption('490 AI')
 
-    # Fill background
-    background = pygame.Surface(screen.get_size())
-    background = background.convert()
-    background.fill((250, 250, 250))
-
-    # Display some text
-    font = pygame.font.Font(None, 36)
-
-
-
-    # Blit everything to the screen
-    screen.blit(background, (0, 0))
-
-    pygame.display.flip()
+    #instantiate DF
+    DF = DecisionFactory()
 
     # Event loop
-    while 1:
+    while not FINISHED:
         for event in pygame.event.get():
             if event.type == QUIT:
-                return
-		for i in range(0, 10):
-			for j in range(0, 10):
-				if Grid[i,j] == 1:
-					pygame.draw.rect(background, black, [i, j, 50, 50], )
-				if Grid[i,j] == 0:
-					pygame.draw.rect(background, grey, [i, j, 50, 50], )
-			
+                pygame.quit()
+                sys.exit()
+                
+ 
 	
-
-        screen.blit(background, (0, 0))
-        pygame.display.flip()
-
+    	for row in range(10):
+			for col in range(10):
+				pygame.draw.rect(screen, colours[Grid[row][col]], [col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE])
+         
+        
+    	
+        DF.put_result(validate_move(DF))   
+        pygame.display.update()
 
 if __name__ == '__main__': main()
