@@ -18,16 +18,7 @@ colours = {
             4 : red
             }
 
-Grid = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 2, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 3, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+Grid =[]
 
 
 TILESIZE = 50
@@ -40,11 +31,26 @@ POSITION = [3,3]
 #PLAYER HAS FOUND GOAL
 FINISHED = False
 
+#Steps to reach Portal
+STEPS = 0;
+
+#find starting position
+def find_pos():
+    global POSITION
+    
+    for row in range(MAPHEIGHT):
+        for col in range(MAPWIDTH):
+            tile = Grid[row][col]
+            if tile == 2:
+                POSITION = [row, col]
+                return
+
 #gets decision & checks if valid
 def validate_move(DF):
     global FINISHED
     global POSITION
     global Grid
+    global STEPS
     choice = DF.get_decision()
     if choice == 'up':
         check_pos = [POSITION[0],POSITION[1]+1]
@@ -58,19 +64,50 @@ def validate_move(DF):
         check_pos = [POSITION[0],POSITION[1]]
     tile = Grid[check_pos[0]][check_pos[1]]
     if tile == 3:
+        Grid[POSITION[0]][POSITION[1]] = 0
+        POSITION[0] = check_pos[0]
+        POSITION[1] = check_pos[1]
+        Grid[POSITION[0]][POSITION[1]] = 2
         FINISHED = True
-        return 'success'
+        STEPS += 1
+        return 'portal'
     if tile == 0:
         Grid[POSITION[0]][POSITION[1]] = 0
         POSITION[0] = check_pos[0]
         POSITION[1] = check_pos[1]
         Grid[POSITION[0]][POSITION[1]] = 2
+        STEPS += 1
         return 'success'
     else: 
-        return 'fail'
+        return 'wall'
+    
+def open_map():
+    global Grid
+    row = 0
+    with open('map.txt', 'r') as file:
+        for line in file.readlines():
+            line =line.strip()
+            Grid.append([])
+            for ch in line:
+                Grid[row].append(int(ch))
+            row += 1
+            
+
     
 def main():
-	 # Initialise screen
+    global MAPWIDTH
+    global MAPHEIGHT
+    global Grid
+    #read map
+    open_map()
+    
+    #Set Map dimensions
+    MAPHEIGHT= len(Grid) 
+    MAPWIDTH = len(Grid[0]) 
+    print(MAPHEIGHT)
+    find_pos()
+ 
+	# Initialise screen
     pygame.init()
     screen = pygame.display.set_mode((MAPWIDTH*TILESIZE, MAPHEIGHT*TILESIZE))
     pygame.display.set_caption('490 AI')
@@ -87,13 +124,14 @@ def main():
                 
  
 	
-    	for row in range(10):
-			for col in range(10):
+    	for row in range(MAPHEIGHT):
+			for col in range(MAPWIDTH):
 				pygame.draw.rect(screen, colours[Grid[row][col]], [col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE])
          
         
     	
         DF.put_result(validate_move(DF))   
         pygame.display.update()
+    print "Portal found in:",STEPS,"steps"
 
 if __name__ == '__main__': main()
