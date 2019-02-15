@@ -15,8 +15,15 @@ class DecisionFactory:
     def random_direction(self):
     	#r = random.randint(0,4) # Includes wait state
     	r = random.randint (1,4) # Does NOT include wait
-    	# Update last direction to be the one just
+    	
+        if(self.last_result == 'wall'):
+            if(self.directions[r] == self.last_direction):
+                self.random_direction()    
+            
+        
+        # Update last direction to be the one just
     	self.last_direction = self.directions[r]
+      
     	return self.directions[r]
     
     def put_result(self, result):

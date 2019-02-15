@@ -79,7 +79,8 @@ def validate_move(DF):
         STEPS += 1
         return 'success'
     else: 
-        return 'wall'
+		STEPS += 1
+		return 'wall'
     
 def open_map():
     global Grid
@@ -104,7 +105,7 @@ def main():
     #Set Map dimensions
     MAPHEIGHT= len(Grid) 
     MAPWIDTH = len(Grid[0]) 
-    print(MAPHEIGHT)
+    
     find_pos()
  
 	# Initialise screen
