@@ -18,7 +18,8 @@ class DecisionFactory:
     	
         if(self.last_result == 'wall'):
             if(self.directions[r] == self.last_direction):
-                self.random_direction()    
+                self.random_direction()
+		return
             
         
         # Update last direction to be the one just
